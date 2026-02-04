@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Valentine?</title>
+  <style>
+    :root {
+      --bg1: #ffdde1;
+      --bg2: #ee9ca7;
+      --card: rgba(255,255,255,0.85);
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+
+    .card{
+      width:min(520px,92vw);
+      padding:32px 24px 40px;
+      border-radius:18px;
+      background:var(--card);
+      backdrop-filter: blur(10px);
+      box-shadow:0 10px 30px rgba(0,0,0,0.15);
+      text-align:center;
+      position:relative;
+    }
+
+    h1{
+      margin:0 0 18px;
+      font-size: clamp(28px, 3.2vw, 40px);
+    }
+    p{ margin:0 0 28px; opacity:.85; }
+
+    /* The playground is the area where No can move */
+    .playground{
+      position:relative;
+      height:90px;                /* fixed area so No always stays "on the page" */
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:14px;
+      user-select:none;
+    }
+
+    button{
+      border:none;
+      padding:12px 20px;
+      border-radius:999px;
+      font-size:16px;
+      cursor:pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    #yesBtn{
+      background:#22c55e;
+      color:#fff;
+      box-shadow:0 8px 18px rgba(34,197,94,0.35);
+    }
+    #yesBtn:hover{ transform: translateY(-2px) scale(1.02); }
+
+    #noBtn{
+      background:#ef4444;
+      color:#fff;
+      box-shadow:0 8px 18px rgba(239,68,68,0.35);
+
+      /* IMPORTANT: keep it inside playground */
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      touch-action:none;
+    }
+
+    .message{
+      margin-top:18px;
+      font-size:18px;
+      font-weight:600;
+      min-height:24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Will you be my Valentine? 💝</h1>
+    <p>Choose wisely 😄</p>
+
+    <div class="playground" id="playground">
+      <button id="yesBtn">Yes</button>
+      <button id="noBtn" aria-label="No (good luck clicking)">No</button>
+    </div>
+
+    <div class="message" id="msg"></div>
+  </div>
+
+  <script>
+    const playground = document.getElementById("playground");
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const msg = document.getElementById("msg");
+
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    function moveNoButtonInside() {
+      const pRect = playground.getBoundingClientRect();
+      const bRect = noBtn.getBoundingClientRect();
+
+      const padding = 8;
+      const maxX = pRect.width  - bRect.width  - padding;
+      const maxY = pRect.height - bRect.height - padding;
+
+      // Random position within playground bounds
+      const x = Math.random() * maxX + padding/2;
+      const y = Math.random() * maxY + padding/2;
+
+      // Position relative to playground
+      noBtn.style.left = clamp(x, padding/2, maxX) + "px";
+      noBtn.style.top  = clamp(y, padding/2, maxY) + "px";
+      noBtn.style.transform = "translate(0, 0)";
+    }
+
+    // Move it when pointer gets near (not just hover)
+    playground.addEventListener("pointermove", (e) => {
+      const b = noBtn.getBoundingClientRect();
+      const distance = 70; // how close before it runs away (px)
+
+      const dx = e.clientX - (b.left + b.width/2);
+      const dy = e.clientY - (b.top  + b.height/2);
+      const d  = Math.hypot(dx, dy);
+
+      if (d < distance) moveNoButtonInside();
+    });
+
+    // Extra safety: if someone still clicks, dodge
+    noBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      moveNoButtonInside();
+    });
+
+    // Prevent keyboard "Enter" selecting No
+    noBtn.addEventListener("focus", () => yesBtn.focus());
+
+    yesBtn.addEventListener("click", () => {
+      msg.textContent = "Yayyy! 💘 I knew you’d say yes!";
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      yesBtn.style.opacity = 0.85;
+      noBtn.style.opacity = 0.65;
+    });
+
+    // Initial placement (inside playground)
+    moveNoButtonInside();
+  </script>
+</body>
+</html>
